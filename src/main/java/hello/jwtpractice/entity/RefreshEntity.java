@@ -1,5 +1,6 @@
 package hello.jwtpractice.entity;
 
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -8,17 +9,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
-public class UserEntity {
-
+@Getter @Setter
+public class RefreshEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id;
+    private Long id;
 
-    public String email;
-
-    private String userPassword;
-
-    private String role;
+    private String username;
+    private String refresh;
+    private String expiration;
 
 }
