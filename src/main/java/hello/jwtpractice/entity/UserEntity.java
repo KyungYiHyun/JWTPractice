@@ -21,4 +21,6 @@ public class UserEntity {
 
     private String role;
 
+    private String name;
+
 }

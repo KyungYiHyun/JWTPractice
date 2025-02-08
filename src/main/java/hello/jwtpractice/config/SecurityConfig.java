@@ -5,7 +5,9 @@ import hello.jwtpractice.jwt.CustomLogoutFilter;
 import hello.jwtpractice.jwt.JWTFilter;
 import hello.jwtpractice.jwt.JWTUtil;
 import hello.jwtpractice.jwt.LoginFilter;
+import hello.jwtpractice.oauth2.CustomSuccessHandler;
 import hello.jwtpractice.reposiroty.RefreshRepository;
+import hello.jwtpractice.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,11 +32,16 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
     private final RefreshRepository refreshRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private CustomSuccessHandler customSuccessHandler;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,RefreshRepository refreshRepository) {
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil,RefreshRepository refreshRepository
+    ,CustomOAuth2UserService customOAuth2UserService,CustomSuccessHandler customSuccessHandler) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
         this.refreshRepository = refreshRepository;
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.customSuccessHandler = customSuccessHandler;
     }
 
     @Bean
@@ -65,6 +72,8 @@ public class SecurityConfig {
                         configuration.setAllowedHeaders(Collections.singletonList("*"));
                         configuration.setMaxAge(3600L);
 
+
+
                         return configuration;
                     }
                 }));
@@ -81,6 +90,13 @@ public class SecurityConfig {
         // http basic 인증 방식 disable
         http.httpBasic((auth) -> auth.disable());
 
+        http.oauth2Login((oauth2)->
+                oauth2.userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
+                        .userService(customOAuth2UserService))
+                        .successHandler(customSuccessHandler)
+                );
+
+
         http.authorizeHttpRequests((auth) -> auth
                 .requestMatchers("/login", "/", "/join").permitAll()
                 .requestMatchers("/admin").hasRole("ADMIN")
@@ -92,6 +108,8 @@ public class SecurityConfig {
         http.addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration),jwtUtil,refreshRepository), UsernamePasswordAuthenticationFilter.class);
 
         http.addFilterBefore(new CustomLogoutFilter(jwtUtil,refreshRepository), LogoutFilter.class);
+
+
 
         http.sessionManagement((session) ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
